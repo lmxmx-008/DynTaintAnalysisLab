@@ -216,7 +216,14 @@ Different taint analysis tools have different features of data structures and ta
 
     In taint tracking, taint color is an attribute used to identify and distinguish different taints. From the color of the taint, one can infer its source, type, or state. However, in our implementation, we do not track the source or state of the taints; we simply differentiate between two states: tainted or not (i.e., only black and white).
 
-Therefore, combining above two features, in runtime.cpp, you will find two sets `taintedPtrVars` and `taintedVars`. For a none-pointer type variable, if it is in `taintedVars`, the variable is tainted; For a pointer type variable, if its runtime-address is in `taintedPtrVars`, it means that the variable is tainted.
+- Taint Data Structure
+
+    We use sets to store taint information. Combining the two features mentioned above, in `runtime.cpp`, you will find two sets `taintedPtrVars` and `taintedVars`. For a none-pointer type variable, if its name is in `taintedVars`, the variable is considered tainted; For a pointer type variable, if its runtime-address is in `taintedPtrVars`, it indicates that the variable is tainted.
+
+- Supported Instructions
+
+    This tool does not support all instruction types, but only a subset of them, including TruncInst, GEPInst, StoreInst, LoadInst, BinaryOperator. To create a more comprehensive and universal tool, it will be necessary to accommodate all instruction types.
+
 
 #### Relating to instrumentation
 The instrumentation method in this lab is similar to the dynamic analysis pass of lab2. Review [Instrumentation Pss](https://github.com/ecnu-sa-labs/ecnu-sa-labs/blob/ff8658063073a4aa46afa6552bd18c281b477baf/lab_manual/lab2.md#instrumentation-pass) and [Inserting Instructions into LLVM code](https://github.com/ecnu-sa-labs/ecnu-sa-labs/blob/ff8658063073a4aa46afa6552bd18c281b477baf/lab_manual/lab2.md#inserting-instructions-into-llvm-code) in **lab2's tutorial**
