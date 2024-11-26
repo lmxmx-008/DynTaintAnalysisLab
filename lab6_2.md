@@ -8,7 +8,7 @@ In this lab, you will build a dynamic taint analysis tool on the IR intermediate
 ### Setup
 The code for Lab6_2 is located under `/lab6_2/`.
 
-- Open the lab2 folder in VS Code, using the 'Open Folder' option in VS Code.
+- Open the lab6_2 folder in VS Code, using the 'Open Folder' option in VS Code.
 - Make sure the Docker is running on your machine.
 - Open the VS Code Command Palette by pressing F1; search and select Reopen in Container.
 - This will set up the development environment for this lab in VS Code.
@@ -39,7 +39,7 @@ The following commands set up the lab, using the CMake/Makefile pattern.
 /lab6_2/build$ make
 ```
 
-You should see several files created in the lab6_2/build directory. A LLVM pass named DynTaintAnalysisPass.so will be generated as the result of linking `DynTaintAnalysisPass.cpp` and `Instrument.cpp` under `lab6_2/src`, and a runtime library called `libruntime.so`, corresponding to `lab6_2/lib/runtime.cpp`. These are all source files that you will modify later. If you recall the project build steps of lab2, the steps here are almost identical to the part where it uses a dynamic analysis pass.
+You should see several files created in the lab6_2/build directory. A LLVM pass named `DynTaintAnalysisPass.so` will be generated as the result of linking `DynTaintAnalysisPass.cpp` and `Instrument.cpp` under `lab6_2/src`, and a runtime library called `libruntime.so`, corresponding to `lab6_2/lib/runtime.cpp`. These are all source files that you will modify later. If you recall the project build steps of lab2, the steps here are almost identical to the part where it uses a dynamic analysis pass.
 
 #### Step 2
 Generate LLVM IR as you did in previous lab.
@@ -50,7 +50,7 @@ Generate LLVM IR as you did in previous lab.
 ```
 
 #### Step 3
-Use opt to run the provided DynTaintAnalysisPass pass on the compiled C program. This step generates an instrumented program with runtime function calls.
+Use opt to run the provided DynTaintAnalysisPass pass on the compiled C++ program. This step generates an instrumented program with runtime function calls.
 ```
 /lab6_2/test$ opt -load ../build/DynTaintAnalysisPass.so -DynTaintAnalysisPass -S InjectionAttack.ll -o InjectionAttack.dynamic.ll
 /lab6_2/test$ opt -load ../build/DynTaintAnalysisPass.so -DynTaintAnalysisPass -S ControlFlowHijack.ll -o ControlFlowHijack.dynamic.ll
@@ -140,7 +140,7 @@ drwxrwxrwx 1 root root   512 Nov 26 08:45 ..
 -rw-r--r-- 1 root root     0 Nov 26 09:22 otherfile.secret
 ```
 
-In `ControlFlowHijack.cpp`, when user/hacker write to `mem.buffer` without checking the buffer size, it overwrites what follows; in this case, when the input size is greater than 8, the value of `mem.data` is overwritten, and the value of `mem.data` indirectly determines the control flow that follows, so the user's input can accidentally affect the control flow of the program, causing control flow Hijacking.
+In `ControlFlowHijack.cpp`, when user/hacker write to `mem.buffer` without checking the buffer size, it overwrites what follows; in this case, when the input size is greater than 8, the value of `mem.data` is overwritten, and the value of `mem.data` indirectly determines the control flow that follows, so the user's input can **accidentally** affect the control flow of the program, causing control flow Hijacking(Normally, `secret_value` will not be equal to 97).
 ```
 struct Memory{
         char buffer[8]; 
@@ -219,14 +219,33 @@ Different taint analysis tools have different features of data structures and ta
 - Taint Data Structure
 
     We use sets to store taint information. Combining the two features mentioned above, in `runtime.cpp`, you will find two sets `taintedPtrVars` and `taintedVars`. For a none-pointer type variable, if its name is in `taintedVars`, the variable is considered tainted; For a pointer type variable, if its runtime-address is in `taintedPtrVars`, it indicates that the variable is tainted.
+    
+    A more sophisticated tool might use data structures such as shadow memory, which is simplified here.
 
 - Supported Instructions
 
     This tool does not support all instruction types, but only a subset of them, including TruncInst, GEPInst, StoreInst, LoadInst, BinaryOperator. To create a more comprehensive and universal tool, it will be necessary to accommodate all instruction types.
 
+- Different treatment for pointer and non-pointer types
+
+    The necessity of this differentiation: At the IR level, we can't get the location of a non-pointer variable in memory, while at the binary (assembly) level, we can tell by instruction which register/memory the value is in.
+
+    Before distinguishing between pointer and non-pointer types, we need to know the pointer/non-pointer type of each instruction operand. This is the type of operand for each instruction:
+
+    |Instruction|Format|
+    |:-:|:-:|
+    |TruncInst|%dest = trunc i32 %src to i8|
+    |GEPInst|%dest = getelementptr inbounds i8, ptr %src, i32 1|
+    |StoreInst|store ptr/i8 %src, ptr %dest, align 8|
+    |LoadInst|%dest = load ptr/i8, ptr %src, align 8|
+    |BinaryOperatorProcess|%dest = add nsw i32 %src1, i32 %src2|
+    
+    Therefore, there are two versions of the function that handle the taint propagation of the StoreInst: `StoreInstProcess` and `StoreInstProcessPtr`.Similarly, when setting the taint source (taint sink), there will also be two versions: `TaintVal` (`CheckVal`) and `TaintPtrVal` (`CheckPtrVal`).
+
+    For LoadInst, since its source operand must be a pointer, the address of the source operand can determine whether pollution is needed, so there is only one Ptr version.
 
 #### Relating to instrumentation
-The instrumentation method in this lab is similar to the dynamic analysis pass of lab2. Review [Instrumentation Pss](https://github.com/ecnu-sa-labs/ecnu-sa-labs/blob/ff8658063073a4aa46afa6552bd18c281b477baf/lab_manual/lab2.md#instrumentation-pass) and [Inserting Instructions into LLVM code](https://github.com/ecnu-sa-labs/ecnu-sa-labs/blob/ff8658063073a4aa46afa6552bd18c281b477baf/lab_manual/lab2.md#inserting-instructions-into-llvm-code) in **lab2's tutorial**
+The instrumentation method in this lab is similar to the dynamic analysis pass of lab2. Review [Instrumentation Pss](https://github.com/ecnu-sa-labs/ecnu-sa-labs/blob/ff8658063073a4aa46afa6552bd18c281b477baf/lab_manual/lab2.md#instrumentation-pass) and [Inserting Instructions into LLVM code](https://github.com/ecnu-sa-labs/ecnu-sa-labs/blob/ff8658063073a4aa46afa6552bd18c281b477baf/lab_manual/lab2.md#inserting-instructions-into-llvm-code) in **lab2's tutorial**.
 
 ### Submission
 Once you are done with the lab, submit your code by commiting and pushing the changes under lab6_2/. Specifically, you need to submit the changes to `src/DynTaintAnalysisPass.cpp`, `src/Instrument.cpp` and `lib/runtime.cpp`
