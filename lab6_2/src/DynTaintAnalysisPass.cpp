@@ -5,7 +5,7 @@ using namespace llvm;
 
 namespace instrument {
 
-const auto PASS_NAME = "DynTaintPass";
+const auto PASS_NAME = "DynTaintAnalysisPass";
 const auto PASS_DESC = "dyntaint-pass";
 
 void setTaintSource(Instruction &I);

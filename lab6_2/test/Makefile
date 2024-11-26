@@ -9,7 +9,7 @@ simple: $(TARGETS)
 
 %: %.cpp
 	clang -emit-llvm -S -fno-discard-value-names -c -o $@.ll $< -g
-	opt -load ../build/DynTaintAnalysisPass.so -DynTaintPass -S $@.ll -o $@.dynamic.ll
+	opt -load ../build/DynTaintAnalysisPass.so -DynTaintAnalysisPass -S $@.ll -o $@.dynamic.ll
 	clang -o $@ -L${PWD}/../build -lruntime $@.dynamic.ll
 
 clean:
