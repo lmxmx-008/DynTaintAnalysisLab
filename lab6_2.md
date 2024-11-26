@@ -228,17 +228,17 @@ Different taint analysis tools have different features of data structures and ta
 
 - Different treatment for pointer and non-pointer types
 
-    The necessity of this differentiation: At the IR level, we can't get the location of a non-pointer variable in memory, while at the binary (assembly) level, we can tell by instruction which register/memory the value is in.
+    The **necessity** of this differentiation: **At the IR level**, we **can't** get the location of a non-pointer variable in memory, while at the binary (assembly) level, we can tell by instruction which register/memory the value is in.
 
     Before distinguishing between pointer and non-pointer types, we need to know the pointer/non-pointer type of each instruction operand. This is the type of operand for each instruction:
 
-    |Instruction|Format|
-    |:-:|:-:|
-    |TruncInst|%dest = trunc i32 %src to i8|
-    |GEPInst|%dest = getelementptr inbounds i8, ptr %src, i32 1|
-    |StoreInst|store ptr/i8 %src, ptr %dest, align 8|
-    |LoadInst|%dest = load ptr/i8, ptr %src, align 8|
-    |BinaryOperatorProcess|%dest = add nsw i32 %src1, i32 %src2|
+    |Instruction|Format|DestType|SrcType|
+    |:-:|:-:|:-:|:-:|
+    |TruncInst|`%dest` = trunc **i32** `%src` to i8|int|int|
+    |GEPInst|`%dest` = getelementptr inbounds i8, **ptr** `%src`, i32 1|ptr|ptr|
+    |StoreInst|store **ptr/i8** `%src`, **ptr** `%dest`, align 8|ptr|ptr/int|
+    |LoadInst|`%dest` = load **ptr/i8**, **ptr** `%src`, align 8|ptr/int|ptr|
+    |BinaryOperatorProcess|`%dest` = add nsw **i32** `%src1`, **i32** `%src2`|int|int|
     
     Therefore, there are two versions of the function that handle the taint propagation of the StoreInst: `StoreInstProcess` and `StoreInstProcessPtr`.Similarly, when setting the taint source (taint sink), there will also be two versions: `TaintVal` (`CheckVal`) and `TaintPtrVal` (`CheckPtrVal`).
 
