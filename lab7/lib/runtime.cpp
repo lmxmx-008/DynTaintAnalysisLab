@@ -177,17 +177,15 @@ extern "C" {
 	void CheckPtrVal(void * srcPtr,const char *srcStr) {
 		std::string srcString(srcStr);
 		if(taintedPtrVars.find(srcPtr)!=taintedPtrVars.end()){
-			errsRed()<< "Taint detected in sensitive position: " << srcPtr << "!\n"<<"Aborted!\n";
+			errsRed()<< "Taint detected in sensitive position: " << srcPtr << "!!!\n";
 			errsWhite()<<"That's the address in:"<<srcString<<"\n";
-			exit(1);
 		}
 		
 	}
 	void CheckVal(const char *srcStr) {
 		std::string srcString(srcStr);
 		if(taintedVars.find(srcStr)!=taintedVars.end()){
-			errsRed() << "Taint detected in sensitive position: " << srcStr << "!\n"<<"Aborted!\n";
-			exit(1);
+			errsRed() << "Taint detected in sensitive position: " << srcStr << "!!!\n";
 		}
 		
 	}

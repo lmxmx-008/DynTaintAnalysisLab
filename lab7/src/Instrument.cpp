@@ -29,7 +29,7 @@ namespace instrument{
 
 			/**
 			* TODO: Add code to instrumentation TruncInst.
-			* View the TruncInstProcess' definition from /lab6/lib/runtime.cpp
+			* View the TruncInstProcess' definition from /lab7/lib/runtime.cpp
 			*/
 
 			Module *M = truncInst->getModule();

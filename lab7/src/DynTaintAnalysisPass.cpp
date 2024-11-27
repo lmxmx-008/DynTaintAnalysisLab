@@ -44,7 +44,7 @@ bool Instrument::runOnFunction(Function &F) {
 		/**
 		* TODO: Add code to instrument the BinaryOperator/LoadInst/StoreInst/GetElementPtrInst/TruncInst
 		* to record their runtime information and propagate the taint.
-		* You can get instrument functions' signature from /lab6/include/Instrument.h.
+		* You can get instrument functions' signature from /lab7/include/Instrument.h.
 		* When instrument Store, pay extra attention to who is the source/destination operand.
 		*/
 
